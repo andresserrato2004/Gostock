@@ -9,7 +9,7 @@
 **/.DS_Store
 # Ignorar archivos de configuración específicos del entorno
 **/*.local
-**/*.env.*
+**/*.env
 # Ignorar archivos de log
 **/*.log
 # Ignorar archivos de build
