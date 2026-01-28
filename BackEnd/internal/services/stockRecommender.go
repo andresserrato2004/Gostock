@@ -78,7 +78,6 @@ func (s *RecommendationService) GetTopRecommendations(limit int) ([]models.Score
 				return
 			}
 
-			// --- CÁLCULO DE VARIABLES DE LA FÓRMULA ---
 
 			// P: Upside Potential (Potencial de Subida)
 			// (Target - Current) / Current
@@ -130,11 +129,11 @@ func (s *RecommendationService) GetTopRecommendations(limit int) ([]models.Score
 				Company:      st.Company,
 				CurrentPrice: currentPrice,
 				TargetPrice:  st.TargetToNum,
-				Upside:       math.Round(upside*10000) / 100,     // Display as %
-				RatingScore:  ratingScore,                        // 0-1
-				Conviction:   math.Round(conviction*10000) / 100, // Display as %
-				Momentum:     math.Round(momentumPct*100) / 100,  // Display as % (Finnhub format)
-				FinalScore:   math.Round(finalScore*10000) / 100, // Scale to 0-100 roughly
+				Upside:       math.Round(upside*10000) / 100,     
+				RatingScore:  ratingScore,                        
+				Conviction:   math.Round(conviction*10000) / 100, 
+				Momentum:     math.Round(momentumPct*100) / 100,  
+				FinalScore:   math.Round(finalScore*10000) / 100, 
 				Reason:       fmt.Sprintf("Rating: %s, Action: %s", st.RatingTo, st.Action),
 			})
 			mu.Unlock()
@@ -144,7 +143,6 @@ func (s *RecommendationService) GetTopRecommendations(limit int) ([]models.Score
 
 	wg.Wait()
 
-	// 3. Ordenar por FinalScore DESC
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].FinalScore > results[j].FinalScore
 	})
@@ -183,7 +181,6 @@ func (s *RecommendationService) getRealTimeQuote(ticker string) (*models.Finnhub
 		return nil, err
 	}
 
-	// Si Finnhub devuelve 0 (ticker no encontrado o error), manejamos
 	// nota: precio 0 es sospechoso.
 	if q.C == 0 {
 		return nil, fmt.Errorf("price is 0 (ticker invalid?)")
@@ -192,7 +189,6 @@ func (s *RecommendationService) getRealTimeQuote(ticker string) (*models.Finnhub
 	return &q, nil
 }
 
-// Helper: Normalizar Rating
 func (s *RecommendationService) normalizeRating(rating string) float64 {
 	r := strings.ToLower(rating)
 	if strings.Contains(r, "strong buy") {
@@ -204,5 +200,6 @@ func (s *RecommendationService) normalizeRating(rating string) float64 {
 	if strings.Contains(r, "hold") || strings.Contains(r, "neutral") || strings.Contains(r, "perform") || strings.Contains(r, "equal-weight") {
 		return 0.5
 	}
-	return 0.2 // Sell, Underperform o desconocido
+	return 0.2 
 }
+

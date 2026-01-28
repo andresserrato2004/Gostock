@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia';
 
 export function useRecommendations() {
     const store = useStockStore();
-    const { recommendations, loading, error } = storeToRefs(store);
+    const { recommendations, isRecsLoading: loading, recsError: error } = storeToRefs(store);
 
     // Estado local para el límite actual
     const currentLimit = ref(7);

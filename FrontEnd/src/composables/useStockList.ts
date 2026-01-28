@@ -6,7 +6,7 @@ import { storeToRefs } from 'pinia';
 export function useStockList() {
 
     const store = useStockStore();
-    const { stocks, meta, loading, currentParams } = storeToRefs(store);
+    const { stocks, meta, isStocksLoading: loading, currentParams } = storeToRefs(store);
     const searchQuery = ref('');
     const totalPages = computed(() => Math.ceil(meta.value.total / meta.value.limit));
 
