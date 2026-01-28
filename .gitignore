@@ -1,0 +1,23 @@
+# Ignorar todos los archivos .env en cualquier subcarpeta
+**/.env
+
+# También es buena práctica ignorar binarios y carpetas de dependencias
+**/node_modules/
+**/dist/
+**/tmp/
+**/vendor/
+**/.DS_Store
+# Ignorar archivos de configuración específicos del entorno
+**/*.local
+**/*.env.*
+# Ignorar archivos de log
+**/*.log
+# Ignorar archivos de build
+**/build/
+**/out/
+# Ignorar archivos de configuración de IDEs
+**/.vscode/
+**/.idea/
+# Ignorar archivos de sistema
+
+/files
