@@ -3,6 +3,16 @@ import { useStockStore } from '../stores/stockStore';
 import { storeToRefs } from 'pinia';
 
 
+/**
+ * Composable para gestionar la lógica de Recomendaciones de Mercado.
+ * * Actúa como una capa intermedia entre el `StockStore` y la vista de StockList, proporcionando:
+ * 1. Estado reactivo sincronizado con Pinia.
+ * 2. Formateadores de datos específicos para la UI (Moneda, Porcentajes).
+ * 3. Lógica de presentación condicional (Clases CSS según Score).
+ * 4. Lógica de paginación y navegación.
+ * 5. Lógica de búsqueda y ordenamiento.
+ * 
+ */
 export function useStockList() {
 
     const store = useStockStore();
@@ -69,7 +79,6 @@ export function useStockList() {
         }
     };
 
-    // Simple debounce implementation if not installing lodash
     function debounceFn(func: Function, wait: number) {
         let timeout: any;
         return function(...args: any[]) {

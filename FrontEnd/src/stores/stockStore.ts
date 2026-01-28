@@ -3,6 +3,14 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import api from '../services/api';
 
+
+/**
+ * @store StockStore
+ * @description Gestión centralizada de activos financieros y recomendaciones algorítmicas.
+ * Maneja la paginación, búsqueda y ordenamiento de stocks, así como la obtención
+ * de oportunidades de mercado (recommendations).
+ */
+
 export const useStockStore = defineStore('stock', () => {
     
     const stocks = ref<Stock[]>([]);
