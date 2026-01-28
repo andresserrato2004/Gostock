@@ -3,12 +3,11 @@ package main
 import (
 	"log"
 
-	"BackEnd/internal/config" // Asegúrate de que coincida con go.mod
-	// Usamos la carpeta
+	"BackEnd/internal/config"
+
+	"BackEnd/internal/middleware"
 	"BackEnd/internal/routes"
 	"BackEnd/internal/services"
-
-	// Usamos la carpeta 'services'
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -31,18 +30,8 @@ func main() {
 
 	r := gin.Default()
 
-	// Configuración CORS
-	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	})
+	r.Use(middleware.CORSMiddleware())
 
-	// Rutas lo tengo que pasar a la carpeta de routes
 	routes.SetupRoutes(r, config.DB)
 
 	log.Println("Server running on port 8080")
