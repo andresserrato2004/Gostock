@@ -12,11 +12,15 @@ import (
 )
 
 type StockHandler struct {
-	db *gorm.DB
+	db         *gorm.DB
+	recService *services.RecommendationService
 }
 
-func NewStockHandler(db *gorm.DB) *StockHandler {
-	return &StockHandler{db: db}
+func NewStockHandler(db *gorm.DB, recService *services.RecommendationService) *StockHandler {
+	return &StockHandler{
+		db:         db,
+		recService: recService,
+	}
 }
 
 // GetStocks obtiene una lista paginada de acciones con opciones de búsqueda y ordenamiento.
@@ -79,11 +83,9 @@ func (h *StockHandler) GetStocks(c *gin.Context) {
 // Devuelve una lista de `ScoredStock` calculada en tiempo real combinando datos de analistas y mercado.
 func (h *StockHandler) RecommendStocks(c *gin.Context) {
 
-	recServices := services.NewRecommendationService(h.db)
-
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
-	scoredStocks, err := recServices.GetTopRecommendations(limit)
+	scoredStocks, err := h.recService.GetTopRecommendations(limit)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
