@@ -11,7 +11,7 @@ The user interface for the **GoStock** platform. Built with **Vue 3** and **Type
 *   **HTTP Client**: [Axios](https://axios-http.com/)
 *   **Build Tool**: [Vite](https://vitejs.dev/) (Fast HMR)
 
-## 📂 Directory Structure
+## Directory Structure
 
 ```bash
 src/

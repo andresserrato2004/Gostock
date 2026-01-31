@@ -31,7 +31,7 @@ Modern, type-safe, and reactive.
 *   **HTTP Client**: Axios
 *   **Build Tool**: [Vite](https://vitejs.dev/)
 
-## 📂 Project Structure
+## Project Structure
 
 ```bash
 GoStock/
@@ -49,7 +49,7 @@ GoStock/
           
 ```
 
-## ⚙️ How to Run
+## How to Run
 
 ### Prerequisites
 *   Go 1.25+
@@ -81,7 +81,7 @@ pnpm dev
 ```
 *App will start on `http://localhost:5173`*
 
-## 🧠 Algorithm 2.0 Logic
+## Algorithm Logic
 
 The recommendation engine calculates a **Final Score (0-100)** for each stock based on four key metrics:
 
