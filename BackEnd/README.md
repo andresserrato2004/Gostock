@@ -174,4 +174,13 @@ Score = (0.4 \times Upside) + (0.2 \times Rating) + (0.2 \times Conviction) + (0
     *   API is available at `localhost:8080`.
 
 
+
+## Test 
+``` bash
+go test -v ./...
+
+# coverage
+
+go test -cover ./...
+```
 ### esto es con amor ❤️ andres 

@@ -18,27 +18,29 @@ import (
 )
 
 type RecommendationService struct {
-	db     *gorm.DB
-	apiKey string
-	apiUrl string
+	db         *gorm.DB
+	apiKey     string
+	apiUrl     string
+	httpClient *http.Client
 }
 
 func NewRecommendationService(db *gorm.DB) *RecommendationService {
 	return &RecommendationService{
-		db:     db,
-		apiKey: os.Getenv("FINNHUB_API_KEY"),
-		apiUrl: os.Getenv("FINNHUB_API_URL"),
+		db:         db,
+		apiKey:     os.Getenv("FINNHUB_API_KEY"),
+		apiUrl:     os.Getenv("FINNHUB_API_URL"),
+		httpClient: &http.Client{Timeout: 10 * time.Second},
 	}
 }
 
 // GetTopRecommendations obtiene las mejores recomendaciones de acciones para realizar inversiones.
 //
-// Recibe un int `limit` que especifica el número máximo de recomendaciones a devolver.	
+// Recibe un int `limit` que especifica el número máximo de recomendaciones a devolver.
 // esto por que Finnhub tiene un limite de peticiones por minuto en su plan gratuito que es 30.
-// 
+//
 // Devuelve una lista de `ScoredStock` ordenada por el puntaje calculado, junto con un error si ocurre alguno.
 func (s *RecommendationService) GetTopRecommendations(limit int) ([]models.ScoredStock, error) {
-	
+
 	var candidates []models.Stock
 	hardLimit := 30
 
@@ -68,64 +70,14 @@ func (s *RecommendationService) GetTopRecommendations(limit int) ([]models.Score
 			quote, err := s.getRealTimeQuote(st.Ticker)
 			if err != nil {
 				log.Println("Error fetching data for", st.Ticker, ":", err)
-				return 
-			}
-
-			currentPrice := quote.C
-			momentumPct := quote.Dp 
-
-			if currentPrice <= 0 {
 				return
 			}
 
-
-			// P: Upside Potential (Potencial de Subida)
-			upside := (st.TargetToNum - currentPrice) / currentPrice
-
-			// C: Consensus Rating Score (Consenso)
-			ratingScore := s.normalizeRating(st.RatingTo)
-
-			// E: Analyst Conviction (Convicción/Esperanza)
-			conviction := 0.0
-			if st.TargetFromNum > 0 {
-				conviction = (st.TargetToNum - st.TargetFromNum) / st.TargetFromNum
-			}
-
-			// M: Market Momentum (Momentum)
-			momentumDecimal := momentumPct / 100.0
-
-			// Score = (0.4 * P) + (0.2 * C) + (0.2 * E) + (0.2 * M)
-			wP, wC, wE, wM := 0.4, 0.2, 0.2, 0.2
-
-			pClamped := upside
-			if pClamped > 1.0 {
-				pClamped = 1.0
-			} else if pClamped < -1.0 {
-				pClamped = -1.0
-			}
-
-			eClamped := conviction
-			if eClamped > 1.0 {
-				eClamped = 1.0
-			} else if eClamped < -1.0 {
-				eClamped = -1.0
-			}
-
-			finalScore := (wP * pClamped) + (wC * ratingScore) + (wE * eClamped) + (wM * momentumDecimal)
+			// Extract logic to method for better testing
+			scoredStock := s.CalculateScore(st, *quote)
 
 			mu.Lock()
-			results = append(results, models.ScoredStock{
-				Ticker:       st.Ticker,
-				Company:      st.Company,
-				CurrentPrice: currentPrice,
-				TargetPrice:  st.TargetToNum,
-				Upside:       math.Round(upside*10000) / 100,     
-				RatingScore:  ratingScore,                        
-				Conviction:   math.Round(conviction*10000) / 100, 
-				Momentum:     math.Round(momentumPct*100) / 100,  
-				FinalScore:   math.Round(finalScore*10000) / 100, 
-				Reason:       fmt.Sprintf("Rating: %s, Action: %s", st.RatingTo, st.Action),
-			})
+			results = append(results, scoredStock)
 			mu.Unlock()
 
 		}(stock)
@@ -144,11 +96,67 @@ func (s *RecommendationService) GetTopRecommendations(limit int) ([]models.Score
 	return results, nil
 }
 
+// CalculateScore realiza el cálculo puro de la puntuación de una acción.
+// Separado para facilitar pruebas unitarias.
+func (s *RecommendationService) CalculateScore(st models.Stock, quote models.FinnhubQuote) models.ScoredStock {
+	currentPrice := quote.C
+	momentumPct := quote.Dp
 
+	if currentPrice <= 0 {
+		return models.ScoredStock{}
+	}
+
+	// P: Upside Potential (Potencial de Subida)
+	upside := (st.TargetToNum - currentPrice) / currentPrice
+
+	// C: Consensus Rating Score (Consenso)
+	ratingScore := s.normalizeRating(st.RatingTo)
+
+	// E: Analyst Conviction (Convicción/Esperanza)
+	conviction := 0.0
+	if st.TargetFromNum > 0 {
+		conviction = (st.TargetToNum - st.TargetFromNum) / st.TargetFromNum
+	}
+
+	// M: Market Momentum (Momentum)
+	momentumDecimal := momentumPct / 100.0
+
+	// Score = (0.4 * P) + (0.2 * C) + (0.2 * E) + (0.2 * M)
+	wP, wC, wE, wM := 0.4, 0.2, 0.2, 0.2
+
+	pClamped := upside
+	if pClamped > 1.0 {
+		pClamped = 1.0
+	} else if pClamped < -1.0 {
+		pClamped = -1.0
+	}
+
+	eClamped := conviction
+	if eClamped > 1.0 {
+		eClamped = 1.0
+	} else if eClamped < -1.0 {
+		eClamped = -1.0
+	}
+
+	finalScore := (wP * pClamped) + (wC * ratingScore) + (wE * eClamped) + (wM * momentumDecimal)
+
+	return models.ScoredStock{
+		Ticker:       st.Ticker,
+		Company:      st.Company,
+		CurrentPrice: currentPrice,
+		TargetPrice:  st.TargetToNum,
+		Upside:       math.Round(upside*10000) / 100,
+		RatingScore:  ratingScore,
+		Conviction:   math.Round(conviction*10000) / 100,
+		Momentum:     math.Round(momentumPct*100) / 100,
+		FinalScore:   math.Round(finalScore*10000) / 100,
+		Reason:       fmt.Sprintf("Rating: %s, Action: %s", st.RatingTo, st.Action),
+	}
+}
 
 // getRealTimeQuote tiene como parametro el ticker de una acción/compañia
 // obtiene la cotización en tiempo real de una acción utilizando la API de Finnhub.
-// 
+//
 // retorna un puntero a FinnhubQuote y un error si ocurre alguno.
 func (s *RecommendationService) getRealTimeQuote(ticker string) (*models.FinnhubQuote, error) {
 	if s.apiKey == "" {
@@ -157,7 +165,7 @@ func (s *RecommendationService) getRealTimeQuote(ticker string) (*models.Finnhub
 
 	url := fmt.Sprintf("%s?symbol=%s&token=%s", s.apiUrl, ticker, s.apiKey)
 
-	resp, err := http.Get(url)
+	resp, err := s.httpClient.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -195,6 +203,5 @@ func (s *RecommendationService) normalizeRating(rating string) float64 {
 	if strings.Contains(r, "hold") || strings.Contains(r, "neutral") || strings.Contains(r, "perform") || strings.Contains(r, "equal-weight") {
 		return 0.5
 	}
-	return 0.2 
+	return 0.2
 }
-

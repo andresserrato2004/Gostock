@@ -17,19 +17,21 @@ import (
 )
 
 type StockService struct {
-	db *gorm.DB
+	db     *gorm.DB
+	Client *http.Client
 }
 
 func NewStockService(db *gorm.DB) *StockService {
-	return &StockService{db: db}
+	return &StockService{
+		db:     db,
+		Client: &http.Client{Timeout: 10 * time.Second},
+	}
 }
 
 // IngestStocks descarga, limpia y almacena datos de acciones desde la API externa de KarenAI.
 // Se ejecuta al inicio del servidor y maneja la paginación automática hasta traer todos los registros.
 func (s *StockService) IngestStocks() error {
 
-	// Verificar si ya existen datos para evitar recargas innecesarias al reiniciar
-	// si me piden que muestre como se carga la base de datos desde 0, quito este bloque
 	var count int64
 	if err := s.db.Model(&models.Stock{}).Count(&count).Error; err != nil {
 		log.Println("Advertencia: No se pudo verificar el conteo de registros:", err)
@@ -118,7 +120,10 @@ func parseCurrency(value string) float64 {
 
 // fetchWithRetries realiza la petición HTTP con lógica de reintentos automática (Backoff).
 func (s *StockService) fetchWithRetries(url, token string, target interface{}, maxRetries int) error {
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := s.Client
+	if client == nil {
+		client = &http.Client{Timeout: 10 * time.Second}
+	}
 
 	for i := 0; i < maxRetries; i++ {
 		req, _ := http.NewRequest("GET", url, nil)
