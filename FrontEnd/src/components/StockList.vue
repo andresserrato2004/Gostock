@@ -1,6 +1,6 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col h-full border border-gray-100">
-    
+    <!-- top table -->
     <div class="px-4 py-4 sm:px-8 border-b flex-shrink-0 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50">
         <h2 class="text-xl font-semibold leading-tight text-gray-800">
             Real-Time Stock Feed
@@ -25,7 +25,7 @@
             />
         </div>
     </div>
-
+    <!-- colums of the table -->
     <div class="flex-1 overflow-auto bg-white min-h-0 relative">
       <table class="min-w-full leading-normal">
         <thead class="sticky top-0 z-10">
@@ -75,6 +75,8 @@
 
           </tr>
         </thead>
+
+        <!-- content of the table -->
         <tbody>
           <tr v-if="loading && stocks.length === 0">
              <td colspan="6" class="px-5 py-10 border-b border-gray-200 bg-white text-sm text-center">
@@ -148,6 +150,7 @@
       </table>
     </div>
 
+    <!-- pagination / change pags -->
     <div class="px-5 py-3 bg-gray-50 border-t border-gray-200 flex flex-col xs:flex-row items-center xs:justify-between flex-shrink-0">
       <span class="text-xs xs:text-sm text-gray-600 mb-2 xs:mb-0">
         Showing {{ (meta.page - 1) * meta.limit + 1 }} to {{ Math.min(meta.page * meta.limit, meta.total) }} of {{ meta.total }} entries

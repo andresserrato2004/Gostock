@@ -1,11 +1,13 @@
 <template>
+
+    <!-- top table -->
   <div class="bg-white shadow rounded-lg mb-0 border border-gray-100 h-full flex flex-col">
     <div class="p-6 border-b border-gray-100 flex-shrink-0 flex flex-col md:flex-row md:items-center md:justify-between bg-gray-50 rounded-t-lg">
       <div>
           <h2 class="text-xl font-bold text-gray-800">Top Market Opportunities</h2>
           <p class="text-sm text-gray-500 mt-1">Algorithm (Upside + Consensus + Momentum)</p>
       </div>
-      
+      <!-- num selector -->
       <div class="flex items-center gap-4 mt-4 md:mt-0">
           <div class="flex items-center gap-2">
               <label for="limit" class="text-sm font-medium text-gray-700">Show:</label>
@@ -40,6 +42,7 @@
             <p>No recommendations available derived from current market data.</p>
         </div>
         <!-- tengo que ponerle los filtros por busqueda -->
+         <!-- colums of the table -->
         <table v-else class="min-w-full leading-normal">
             <thead class="sticky top-0 z-10 bg-white">
             <tr>
@@ -60,6 +63,8 @@
             </th>
           </tr>
         </thead>
+
+        <!-- content table -->        
         <tbody>
           <tr v-for="item in recommendations" :key="item.ticker" class="hover:bg-gray-50 transition-colors duration-200">
             

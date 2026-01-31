@@ -2,14 +2,19 @@ import { ref } from 'vue';
 import { useStockStore } from '../stores/stockStore';
 import { storeToRefs } from 'pinia';
 
+/**
+ * Composable para gestionar la lógica de Recomendaciones de Mercado.
+ * * Actúa como una capa intermedia entre el `StockStore` y la vista, proporcionando:
+ * 1. Estado reactivo sincronizado con Pinia.
+ * 2. Formateadores de datos específicos para la UI (Moneda, Porcentajes).
+ * 3. Lógica de presentación condicional (Clases CSS según Score).
+ */
 export function useRecommendations() {
     const store = useStockStore();
-    const { recommendations, loading, error } = storeToRefs(store);
+    const { recommendations, isRecsLoading: loading, recsError: error } = storeToRefs(store);
 
-    // Estado local para el límite actual
     const currentLimit = ref(7);
 
-    // Formateadores para la vista
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
     };
@@ -18,7 +23,6 @@ export function useRecommendations() {
         return `${value.toFixed(2)}%`;
     };
 
-    // Lógica de colores según el puntaje
     const getScoreClass = (score: number) => {
         if (score >= 80) return 'bg-green-100 text-green-800 border-green-200';
         if (score >= 50) return 'bg-blue-100 text-blue-800 border-blue-200';

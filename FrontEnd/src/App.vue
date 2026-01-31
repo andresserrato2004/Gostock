@@ -17,7 +17,12 @@ const activeTab = ref('stocks');
             <div class="flex items-center">
                 <div class="flex-shrink-0 flex items-center text-white gap-2">
                      <svg class="h-8 w-8 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        <path 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" 
+                        />
                     </svg>
                     <span class="font-bold text-xl tracking-tight">GoStock Analyst</span>
                 </div>

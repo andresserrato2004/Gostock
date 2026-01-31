@@ -1,3 +1,5 @@
+<!-- TODO hacer mas grande hacia la derecha -->
+
 <template>
   <div class="bg-blue-50 border-t-4 border-blue-500 rounded-b-lg lg:rounded-lg lg:border-t-0 lg:border-l-4 p-5 shadow-sm h-fit">
     <div class="flex items-center justify-between cursor-pointer group" @click="isOpen = !isOpen">
@@ -30,7 +32,7 @@
     </div>
     
     <p v-if="!isOpen" class="text-xs text-blue-600 mt-2 ml-1 cursor-pointer hover:underline" @click="isOpen = true">
-        Understand the Formula 2.0 scoring logic.
+        Understand the Formula.
     </p>
 
     <div v-show="isOpen" class="mt-4 text-gray-700 text-sm space-y-5 animate-fade-in border-t border-blue-200 pt-4">
