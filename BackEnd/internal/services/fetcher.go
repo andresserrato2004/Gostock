@@ -24,8 +24,12 @@ func NewStockService(db *gorm.DB) *StockService {
 	return &StockService{db: db}
 }
 
+// IngestStocks descarga, limpia y almacena datos de acciones desde la API externa de KarenAI.
+// Se ejecuta al inicio del servidor y maneja la paginación automática hasta traer todos los registros.
 func (s *StockService) IngestStocks() error {
+
 	// Verificar si ya existen datos para evitar recargas innecesarias al reiniciar
+	// si me piden que muestre como se carga la base de datos desde 0, quito este bloque
 	var count int64
 	if err := s.db.Model(&models.Stock{}).Count(&count).Error; err != nil {
 		log.Println("Advertencia: No se pudo verificar el conteo de registros:", err)
@@ -35,14 +39,14 @@ func (s *StockService) IngestStocks() error {
 		return nil
 	}
 
-	baseURL := os.Getenv("API_URL")
+	baseURL := os.Getenv("API_URL_Karen")
 	if baseURL == "" {
-		return fmt.Errorf("API_URL no esta en el archivo .env")
+		return fmt.Errorf("API_URL_Karen no esta en el archivo .env")
 	}
 
-	apiKey := os.Getenv("API_KEY")
+	apiKey := os.Getenv("API_KEY_Karen")
 	if apiKey == "" {
-		return fmt.Errorf("API_KEY no esta en el archivo .env")
+		return fmt.Errorf("API_KEY_Karen no esta en el archivo .env")
 	}
 
 	nextPage := ""
@@ -54,7 +58,7 @@ func (s *StockService) IngestStocks() error {
 			FullUrl = fmt.Sprintf("%s?next_page=%s", baseURL, nextPage)
 		}
 
-		log.Println("Fetching URL:", FullUrl)
+		// log.Println("Fetching URL:", FullUrl)
 
 		var apiResp models.ApiResponse
 
@@ -66,7 +70,9 @@ func (s *StockService) IngestStocks() error {
 		if len(apiResp.Data) > 0 {
 
 			s.cleanData(apiResp.Data)
-
+			// aqui es donde si ya hay datos entonces se actualiza solo una parte de la informacion
+			// Upsert (Insertar o Actualizar): Si el Ticker ya existe, actualiza los campos clave.
+			// Esto previene duplicados y mantiene la DB con la última info disponible.
 			err := s.db.Clauses(clause.OnConflict{
 				Columns: []clause.Column{{Name: "ticker"}},
 				DoUpdates: clause.AssignmentColumns([]string{
@@ -84,14 +90,16 @@ func (s *StockService) IngestStocks() error {
 			break
 		}
 
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond) // Pausa para no sobrecargar el servidor
 	}
 
-	log.Println("datos melos")
+	// log.Println("datos melos")
 
 	return nil
 }
 
+// cleanData normaliza los datos "crudos" recibidos de la API.
+// Convierte strings de precio ("$150.00") a float64 numérico para poder ordenar y filtrar.
 func (s *StockService) cleanData(stocks []models.Stock) {
 	for i := range stocks {
 		stocks[i].TargetFromNum = parseCurrency(stocks[i].TargetFrom)
@@ -108,6 +116,7 @@ func parseCurrency(value string) float64 {
 	return val
 }
 
+// fetchWithRetries realiza la petición HTTP con lógica de reintentos automática (Backoff).
 func (s *StockService) fetchWithRetries(url, token string, target interface{}, maxRetries int) error {
 	client := &http.Client{Timeout: 10 * time.Second}
 

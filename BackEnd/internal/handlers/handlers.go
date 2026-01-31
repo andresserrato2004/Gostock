@@ -19,6 +19,11 @@ func NewStockHandler(db *gorm.DB) *StockHandler {
 	return &StockHandler{db: db}
 }
 
+// GetStocks obtiene una lista paginada de acciones con opciones de búsqueda y ordenamiento.
+//
+// Recibe query params: `page`, `limit`, `search`, `sort_by`, `order`.
+//
+// Devuelve un objeto JSON con la data de las acciones y metadatos de paginación.
 func (h *StockHandler) GetStocks(c *gin.Context) {
 	var stocks []models.Stock
 	var total int64
@@ -40,7 +45,6 @@ func (h *StockHandler) GetStocks(c *gin.Context) {
 
 	query.Count(&total)
 
-	// Validate sort column to prevent SQL injection
 	validSorts := map[string]bool{
 		"ticker": true, "company": true, "target_to_num": true, "rating_to": true, "action": true,
 	}
@@ -68,6 +72,11 @@ func (h *StockHandler) GetStocks(c *gin.Context) {
 	})
 }
 
+// RecommendStocks maneja la solicitud de recomendaciones de inversión avanzadas.
+//
+// Recibe un int `limit` (via query param) que especifica el número máximo de recomendaciones a devolver (default 10).
+//
+// Devuelve una lista de `ScoredStock` calculada en tiempo real combinando datos de analistas y mercado.
 func (h *StockHandler) RecommendStocks(c *gin.Context) {
 
 	recServices := services.NewRecommendationService(h.db)
@@ -89,10 +98,6 @@ func (h *StockHandler) RecommendStocks(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": scoredStocks,
-		"meta": gin.H{
-			"count": len(scoredStocks),
-			"info":  "algoritmo: upside (50%), Rating (30%), Sentiment (20%)",
-		},
 	})
 
 }
