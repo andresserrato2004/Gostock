@@ -19,7 +19,8 @@ src/
 ├── components/         
 │   ├── StockList.vue   
 │   ├── RecommendationList.vue 
-│   └── AlgorithmExplanation.vue 
+│   ├── AlgorithmExplanation.vue 
+│   └── GlobalErrorAlert.vue
 ├── composables/        
 │   ├── useStockList.ts
 │   └── useRecommendations.ts
