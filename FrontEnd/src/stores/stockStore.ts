@@ -27,6 +27,12 @@ export const useStockStore = defineStore('stock', () => {
     const recommendations = ref<Recommendation[]>([]);
     const isRecsLoading = ref(false);
     const recsError = ref<string | null>(null);
+    const recsLimit = ref(7);
+
+    const clearErrors = () => {
+        stocksError.value = null;
+        recsError.value = null;
+    };
 
     const fetchStocks = async (params: FetchStocksParams) => {
         isStocksLoading.value = true;
@@ -39,22 +45,41 @@ export const useStockStore = defineStore('stock', () => {
             stocks.value = response.data.data;
             meta.value = response.data.meta;
         } catch (err: any) {
-            stocksError.value = err.message || 'Failed to fetch stocks';
+            console.error("Failed to fetch stocks", err);
+            if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+                 stocksError.value = 'We are having trouble connecting to our servers. Please check your internet connection regarding the backend or try again later.';
+            } else if (err.response && err.response.status >= 500) {
+                 stocksError.value = 'Our servers are currently experiencing issues. Please try again later.';
+            } else if (err.response && err.response.status === 429) {
+                 stocksError.value = 'You are making too many requests. Please wait a moment before trying again.';
+            } else {
+                 stocksError.value = err.response?.data?.message || err.message || 'Failed to fetch stocks';
+            }
         } finally {
             isStocksLoading.value = false;
         }
     };
 
-    const fetchRecommendations = async (limit: number = 3) => {
+    const fetchRecommendations = async (limit?: number) => {
         isRecsLoading.value = true;
         recsError.value = null;
+        if (limit) recsLimit.value = limit;
+
         try {
-            const response = await api.getRecommendations({ limit });
+            const response = await api.getRecommendations({ limit: recsLimit.value });
             console.log('Respuesta del Back end (Recommendations):', response.data);
             recommendations.value = response.data.data;
         } catch (err: any) {
             console.error("Failed to fetch recommendations", err);
-            recsError.value = err.message || 'Failed to fetch recommendations';
+            if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+                 recsError.value = 'We are having trouble connecting to our servers. Please check your internet connection regarding the backend or try again later.';
+            } else if (err.response && err.response.status >= 500) {
+                 recsError.value = 'Our servers are currently experiencing issues. Please try again later.';
+            } else if (err.response && err.response.status === 429) {
+                 recsError.value = 'You are making too many requests. Please wait a moment before trying again.';
+            } else {
+                recsError.value = err.response?.data?.message || err.message || 'Failed to fetch recommendations';
+            }
         } finally {
             isRecsLoading.value = false;
         }
@@ -82,7 +107,9 @@ export const useStockStore = defineStore('stock', () => {
         recommendations,
         isRecsLoading,
         recsError,
-
+        recsLimit,
+        
+        clearErrors,
         fetchStocks,
         fetchRecommendations,
         setPage,

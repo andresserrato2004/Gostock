@@ -3,13 +3,14 @@ import { ref } from 'vue';
 import StockList from './components/StockList.vue';
 import RecommendationList from './components/RecommendationList.vue';
 import AlgorithmExplanation from './components/AlgorithmExplanation.vue';
+import GlobalErrorAlert from './components/GlobalErrorAlert.vue';
 
 const activeTab = ref('stocks');
 </script>
 
 <template>
   <div class="h-screen flex flex-col bg-gray-100 font-sans overflow-hidden">
-    
+    <GlobalErrorAlert />
     <header class="bg-blue-600 shadow-md flex-shrink-0 z-10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
