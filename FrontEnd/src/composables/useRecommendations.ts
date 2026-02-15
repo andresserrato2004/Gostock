@@ -1,4 +1,3 @@
-import { ref } from 'vue';
 import { useStockStore } from '../stores/stockStore';
 import { storeToRefs } from 'pinia';
 
@@ -11,9 +10,7 @@ import { storeToRefs } from 'pinia';
  */
 export function useRecommendations() {
     const store = useStockStore();
-    const { recommendations, isRecsLoading: loading, recsError: error } = storeToRefs(store);
-
-    const currentLimit = ref(7);
+    const { recommendations, isRecsLoading: loading, recsError: error, recsLimit: currentLimit } = storeToRefs(store);
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
@@ -30,7 +27,9 @@ export function useRecommendations() {
     };
 
     const init = () => {
-        store.fetchRecommendations(currentLimit.value); 
+        if (recommendations.value.length === 0) {
+            store.fetchRecommendations();
+        }
     };
 
     const handleLimitChange = () => {

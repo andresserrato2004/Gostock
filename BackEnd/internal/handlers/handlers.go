@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -88,6 +89,10 @@ func (h *StockHandler) RecommendStocks(c *gin.Context) {
 	scoredStocks, err := h.recService.GetTopRecommendations(limit)
 
 	if err != nil {
+		if errors.Is(err, services.ErrRateLimited) {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "rate limit exceeded"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
 		return

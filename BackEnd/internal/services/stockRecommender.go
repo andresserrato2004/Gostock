@@ -3,6 +3,7 @@ package services
 import (
 	"BackEnd/internal/models"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -12,10 +13,13 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"gorm.io/gorm"
 )
+
+var ErrRateLimited = errors.New("rate limited by finnhub")
 
 type RecommendationService struct {
 	db         *gorm.DB
@@ -57,6 +61,7 @@ func (s *RecommendationService) GetTopRecommendations(limit int) ([]models.Score
 	var results []models.ScoredStock
 	var mu sync.Mutex
 	var wg sync.WaitGroup
+	var rateLimited atomic.Bool
 
 	rateLimiter := time.Tick(100 * time.Millisecond)
 
@@ -70,6 +75,9 @@ func (s *RecommendationService) GetTopRecommendations(limit int) ([]models.Score
 			quote, err := s.getRealTimeQuote(st.Ticker)
 			if err != nil {
 				log.Println("Error fetching data for", st.Ticker, ":", err)
+				if errors.Is(err, ErrRateLimited) {
+					rateLimited.Store(true)
+				}
 				return
 			}
 
@@ -84,6 +92,10 @@ func (s *RecommendationService) GetTopRecommendations(limit int) ([]models.Score
 	}
 
 	wg.Wait()
+
+	if rateLimited.Load() {
+		return nil, ErrRateLimited
+	}
 
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].FinalScore > results[j].FinalScore
@@ -172,6 +184,9 @@ func (s *RecommendationService) getRealTimeQuote(ticker string) (*models.Finnhub
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
+		if resp.StatusCode == http.StatusTooManyRequests {
+			return nil, fmt.Errorf("%w: %s", ErrRateLimited, resp.Status)
+		}
 		return nil, fmt.Errorf("api error: %s", resp.Status)
 	}
 
