@@ -15,17 +15,29 @@ type Stock struct {
 	Ticker        string  `gorm:"uniqueIndex;not null" json:"ticker"` // Símbolo único de la empresa (e.g., AAPL)
 	Company       string  `gorm:"not null" json:"company"`            // Nombre completo de la compañía
 	Brokerage     string  `json:"brokerage"`                          // Firma de corretaje que emite la calificación
-	Action        string  `json:"action"`                             // Acción recomendada 
+	Action        string  `json:"action"`                             // Acción recomendada
 	RatingFrom    string  `json:"rating_from"`                        // Calificación anterior
 	RatingTo      string  `json:"rating_to"`                          // Nueva calificación
-	TargetFrom    string  `gorm:"-" json:"target_from"`               // Precio objetivo anterior 
-	TargetTo      string  `gorm:"-" json:"target_to"`                 // Precio objetivo nuevo 
-	TargetFromNum float64 `gorm:"type:decimal(10,2)" json:"-"`        // Precio objetivo anterior 
-	TargetToNum   float64 `gorm:"type:decimal(10,2)" json:"-"`        // Precio objetivo nuevo 
+	TargetFrom    string  `gorm:"-" json:"target_from"`               // Precio objetivo anterior
+	TargetTo      string  `gorm:"-" json:"target_to"`                 // Precio objetivo nuevo
+	TargetFromNum float64 `gorm:"type:decimal(10,2)" json:"-"`        // Precio objetivo anterior
+	TargetToNum   float64 `gorm:"type:decimal(10,2)" json:"-"`        // Precio objetivo nuevo
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+type Empresas struct {
+	Ticker      string `json:"ticker"`
+	Target_from string `json:"target_from"`
+	Target_to   string `json:"target_to"`
+	Company     string `json:"company"`
+	Action      string `json:"action"`
+	Brokerage   string `json:"brokerage"`
+	Rating_from string `json:"rating_from"`
+	Rating_to   string `json:"rating_to"`
+	Time        string `json:"time"`
 }
 
 // AfterFind es un hook de GORM que se ejecuta después de consultar una Stock.
@@ -41,6 +53,11 @@ func (s *Stock) AfterFind(tx *gorm.DB) (err error) {
 type ApiResponse struct {
 	Data     []Stock `json:"items"`     // Lista de stocks devueltos en la página
 	NextPage string  `json:"next_page"` // Token o URL para la siguiente página de resultados
+}
+
+type Creacion struct {
+	Items    []Empresas `json:"items"`     // Lista de stocks devueltos en la página
+	NextPage string     `json:"next_page"` // Token o URL para la siguiente página de resultados
 }
 
 // ScoredStock representa una acción evaluada y puntuada por el algoritmo de recomendación.

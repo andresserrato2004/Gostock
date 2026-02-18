@@ -69,7 +69,7 @@ func TestFetchWithRetries(t *testing.T) {
 	svc.Client = server.Client()
 
 	var target models.ApiResponse
-	err := svc.fetchWithRetries(server.URL, "test-token", &target, 1)
+	err := svc.fetchWithRetries2(server.URL, "test-token", &target, 1)
 
 	if err != nil {
 		t.Fatalf("fetchWithRetries failed: %v", err)
@@ -95,7 +95,7 @@ func TestFetchWithRetries_FailAfterRetries(t *testing.T) {
 
 	var target models.ApiResponse
 	// Usamos 1 reintento para no esperar mucho tiempo en el test (duerme 1 segundo)
-	err := svc.fetchWithRetries(server.URL, "token", &target, 1)
+	err := svc.fetchWithRetries2(server.URL, "token", &target, 1)
 
 	if err == nil {
 		t.Error("Expected error, got nil")
